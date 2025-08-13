@@ -1,77 +1,15 @@
 #include "storage/secure_storage.h"
 #include <boost/filesystem.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <fstream>
 #include <chrono>
 #include <iomanip>
 #include <sstream>
 #include <random>
-#include <algorithm>
-#include <map>
 
 namespace fs = boost::filesystem;
-
-namespace CryptoApp {
-
-// Simple JSON helper functions
-class SimpleJSON {
-public:
-    static std::string escape(const std::string& str) {
-        std::string result;
-        for (char c : str) {
-            switch (c) {
-                case '"': result += "\\\""; break;
-                case '\\': result += "\\\\"; break;
-                case '\n': result += "\\n"; break;
-                case '\r': result += "\\r"; break;
-                case '\t': result += "\\t"; break;
-                default: result += c; break;
-            }
-        }
-        return result;
-    }
-    
-    static std::string getValue(const std::string& json, const std::string& key) {
-        std::string searchKey = "\"" + key + "\"";
-        size_t pos = json.find(searchKey);
-        if (pos == std::string::npos) return "";
-        
-        pos = json.find(":", pos);
-        if (pos == std::string::npos) return "";
-        
-        pos = json.find("\"", pos);
-        if (pos == std::string::npos) return "";
-        pos++; // Skip opening quote
-        
-        size_t endPos = json.find("\"", pos);
-        if (endPos == std::string::npos) return "";
-        
-        return json.substr(pos, endPos - pos);
-    }
-    
-    static int getIntValue(const std::string& json, const std::string& key) {
-        std::string searchKey = "\"" + key + "\"";
-        size_t pos = json.find(searchKey);
-        if (pos == std::string::npos) return 0;
-        
-        pos = json.find(":", pos);
-        if (pos == std::string::npos) return 0;
-        
-        // Skip whitespace and find number
-        pos++;
-        while (pos < json.length() && (json[pos] == ' ' || json[pos] == '\t')) pos++;
-        
-        std::string numStr;
-        while (pos < json.length() && (std::isdigit(json[pos]) || json[pos] == '-')) {
-            numStr += json[pos++];
-        }
-        
-        return numStr.empty() ? 0 : std::stoi(numStr);
-    }
-    
-    static size_t getSizeTValue(const std::string& json, const std::string& key) {
-        return static_cast<size_t>(getIntValue(json, key));
-    }
-};
+namespace pt = boost::property_tree;
 
 namespace CryptoApp {
 
@@ -134,107 +72,59 @@ void SecureStorage::loadMetadata() {
     }
     
     try {
-        std::ifstream file(metadataFile);
-        if (!file.is_open()) {
-            throw std::runtime_error("Could not open metadata file");
-        }
-        
-        std::string jsonContent((std::istreambuf_iterator<char>(file)),
-                               std::istreambuf_iterator<char>());
-        file.close();
+        pt::ptree tree;
+        pt::read_json(metadataFile, tree);
         
         metadata.clear();
         
-        // Simple JSON parsing for files section
-        size_t filesPos = jsonContent.find("\"files\"");
-        if (filesPos == std::string::npos) return;
-        
-        size_t openBrace = jsonContent.find("{", filesPos);
-        if (openBrace == std::string::npos) return;
-        
-        size_t pos = openBrace + 1;
-        while (pos < jsonContent.length()) {
-            // Find next file entry key
-            size_t keyStart = jsonContent.find("\"", pos);
-            if (keyStart == std::string::npos) break;
-            keyStart++;
-            
-            size_t keyEnd = jsonContent.find("\"", keyStart);
-            if (keyEnd == std::string::npos) break;
-            
-            std::string fileId = jsonContent.substr(keyStart, keyEnd - keyStart);
-            
-            // Find the file data object
-            size_t objStart = jsonContent.find("{", keyEnd);
-            if (objStart == std::string::npos) break;
-            
-            size_t objEnd = objStart + 1;
-            int braceCount = 1;
-            while (objEnd < jsonContent.length() && braceCount > 0) {
-                if (jsonContent[objEnd] == '{') braceCount++;
-                else if (jsonContent[objEnd] == '}') braceCount--;
-                objEnd++;
-            }
-            
-            std::string fileJson = jsonContent.substr(objStart, objEnd - objStart);
-            
+        for (const auto& item : tree.get_child("files")) {
+            const auto& fileData = item.second;
             FileMetadata meta;
-            meta.originalName = SimpleJSON::getValue(fileJson, "originalName");
-            meta.encryptedName = SimpleJSON::getValue(fileJson, "encryptedName");
-            meta.hash = SimpleJSON::getValue(fileJson, "hash");
+            
+            meta.originalName = fileData.get<std::string>("originalName");
+            meta.encryptedName = fileData.get<std::string>("encryptedName");
+            meta.hash = fileData.get<std::string>("hash");
             meta.hashAlgorithm = static_cast<HashAlgorithm>(
-                SimpleJSON::getIntValue(fileJson, "hashAlgorithm"));
-            meta.timestamp = SimpleJSON::getValue(fileJson, "timestamp");
-            meta.originalSize = SimpleJSON::getSizeTValue(fileJson, "originalSize");
-            meta.encryptedSize = SimpleJSON::getSizeTValue(fileJson, "encryptedSize");
+                fileData.get<int>("hashAlgorithm"));
+            meta.timestamp = fileData.get<std::string>("timestamp");
+            meta.originalSize = fileData.get<size_t>("originalSize");
+            meta.encryptedSize = fileData.get<size_t>("encryptedSize");
             
-            metadata[fileId] = meta;
-            
-            pos = objEnd;
+            metadata[item.first] = meta;
         }
         
-    } catch (const std::exception& e) {
+    } catch (const pt::ptree_error& e) {
         throw std::runtime_error("Failed to load metadata: " + std::string(e.what()));
     }
 }
 
 void SecureStorage::saveMetadata() {
     try {
-        std::stringstream json;
-        json << "{\n";
-        json << "  \"version\": \"1.0\",\n";
-        json << "  \"created\": \"" << SimpleJSON::escape(getCurrentTimestamp()) << "\",\n";
-        json << "  \"files\": {\n";
+        pt::ptree tree;
+        pt::ptree filesTree;
         
-        bool first = true;
         for (const auto& item : metadata) {
-            if (!first) json << ",\n";
-            first = false;
-            
+            pt::ptree fileTree;
             const auto& meta = item.second;
-            json << "    \"" << SimpleJSON::escape(item.first) << "\": {\n";
-            json << "      \"originalName\": \"" << SimpleJSON::escape(meta.originalName) << "\",\n";
-            json << "      \"encryptedName\": \"" << SimpleJSON::escape(meta.encryptedName) << "\",\n";
-            json << "      \"hash\": \"" << SimpleJSON::escape(meta.hash) << "\",\n";
-            json << "      \"hashAlgorithm\": " << static_cast<int>(meta.hashAlgorithm) << ",\n";
-            json << "      \"timestamp\": \"" << SimpleJSON::escape(meta.timestamp) << "\",\n";
-            json << "      \"originalSize\": " << meta.originalSize << ",\n";
-            json << "      \"encryptedSize\": " << meta.encryptedSize << "\n";
-            json << "    }";
+            
+            fileTree.put("originalName", meta.originalName);
+            fileTree.put("encryptedName", meta.encryptedName);
+            fileTree.put("hash", meta.hash);
+            fileTree.put("hashAlgorithm", static_cast<int>(meta.hashAlgorithm));
+            fileTree.put("timestamp", meta.timestamp);
+            fileTree.put("originalSize", meta.originalSize);
+            fileTree.put("encryptedSize", meta.encryptedSize);
+            
+            filesTree.put_child(item.first, fileTree);
         }
         
-        json << "\n  }\n";
-        json << "}\n";
+        tree.put_child("files", filesTree);
+        tree.put("version", "1.0");
+        tree.put("created", getCurrentTimestamp());
         
-        std::ofstream file(metadataFile);
-        if (!file.is_open()) {
-            throw std::runtime_error("Could not open metadata file for writing");
-        }
+        pt::write_json(metadataFile, tree);
         
-        file << json.str();
-        file.close();
-        
-    } catch (const std::exception& e) {
+    } catch (const pt::ptree_error& e) {
         throw std::runtime_error("Failed to save metadata: " + std::string(e.what()));
     }
 }
