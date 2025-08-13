@@ -146,7 +146,7 @@ jobs:
           Write-Host "Attempt $attempt of $maxAttempts"
           try {
             # Use explicit package list from vcpkg.json
-            C:\vcpkg\vcpkg.exe install boost-system:x64-windows boost-filesystem:x64-windows boost-program-options:x64-windows cryptopp:x64-windows openssl:x64-windows --clean-after-build
+            C:\vcpkg\vcpkg.exe install boost-system:x64-windows boost-filesystem:x64-windows boost-program-options:x64-windows boost-property-tree:x64-windows cryptopp:x64-windows openssl:x64-windows --clean-after-build
             $success = $true
             break
           } catch {
@@ -166,6 +166,7 @@ jobs:
           C:\vcpkg\vcpkg.exe install boost-system:x64-windows --clean-after-build
           C:\vcpkg\vcpkg.exe install boost-filesystem:x64-windows --clean-after-build
           C:\vcpkg\vcpkg.exe install boost-program-options:x64-windows --clean-after-build
+          C:\vcpkg\vcpkg.exe install boost-property-tree:x64-windows --clean-after-build
         }
     
     - name: Setup Qt5
