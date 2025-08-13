@@ -202,7 +202,7 @@ function Test-AESCryptography {
         20
     
     Invoke-Test "AES Key Validation" `
-        "& openssl enc -aes-256-cbc -d -in aes_test.enc -out /dev/null -k 'wrongpassword' 2>$null; if (`$LASTEXITCODE -ne 0) { `$true } else { `$false }" `
+        "& openssl enc -aes-256-cbc -d -in aes_test.enc -out `$null -k 'wrongpassword' 2>`$null; if (`$LASTEXITCODE -ne 0) { `$true } else { `$false }" `
         "Should fail with incorrect AES key" `
         10
 }
@@ -217,27 +217,27 @@ function Test-RSACryptography {
     }
     
     Invoke-Test "RSA Key Generation" `
-        "& openssl genrsa -out rsa_test_key.pem 2048 2>$null; Test-Path rsa_test_key.pem" `
+        "& openssl genrsa -out rsa_test_key.pem 2048 2>`$null; Test-Path rsa_test_key.pem" `
         "Should generate RSA-2048 private key" `
         15
-    
+
     Invoke-Test "RSA Public Key Extraction" `
-        "& openssl rsa -in rsa_test_key.pem -pubout -out rsa_test_pub.pem 2>$null; Test-Path rsa_test_pub.pem" `
+        "& openssl rsa -in rsa_test_key.pem -pubout -out rsa_test_pub.pem 2>`$null; Test-Path rsa_test_pub.pem" `
         "Should extract RSA public key" `
         10
     
     Invoke-Test "RSA Encryption" `
-        "& openssl rsautl -encrypt -inkey rsa_test_pub.pem -pubin -in small_test.txt -out rsa_encrypted.bin 2>$null; Test-Path rsa_encrypted.bin" `
+        "& openssl rsautl -encrypt -inkey rsa_test_pub.pem -pubin -in small_test.txt -out rsa_encrypted.bin 2>`$null; Test-Path rsa_encrypted.bin" `
         "Should encrypt small file with RSA public key" `
         15
-    
+
     Invoke-Test "RSA Decryption" `
-        "& openssl rsautl -decrypt -inkey rsa_test_key.pem -in rsa_encrypted.bin -out rsa_decrypted.txt 2>$null; if (Test-Path rsa_decrypted.txt) { (Get-Content small_test.txt -Raw) -eq (Get-Content rsa_decrypted.txt -Raw) } else { `$false }" `
+        "& openssl rsautl -decrypt -inkey rsa_test_key.pem -in rsa_encrypted.bin -out rsa_decrypted.txt 2>`$null; if (Test-Path rsa_decrypted.txt) { (Get-Content small_test.txt -Raw) -eq (Get-Content rsa_decrypted.txt -Raw) } else { `$false }" `
         "Should decrypt RSA file and match original" `
         15
-    
+
     Invoke-Test "RSA Key Size Validation" `
-        "& openssl rsa -in rsa_test_key.pem -text -noout 2>$null | Select-String '2048 bit'" `
+        "& openssl rsa -in rsa_test_key.pem -text -noout 2>`$null | Select-String '2048 bit'" `
         "RSA key should be 2048 bits" `
         10
 }
@@ -282,21 +282,19 @@ function Test-DigitalSignatures {
     }
     
     Invoke-Test "Digital Signature Creation" `
-        "& openssl dgst -sha256 -sign test_private.pem -out signature.sig test_document.txt 2>$null; Test-Path signature.sig" `
+        "& openssl dgst -sha256 -sign test_private.pem -out signature.sig test_document.txt 2>`$null; Test-Path signature.sig" `
         "Should create digital signature" `
         15
-    
+
     Invoke-Test "Digital Signature Verification" `
-        "& openssl dgst -sha256 -verify test_public.pem -signature signature.sig test_document.txt 2>$null; `$LASTEXITCODE -eq 0" `
+        "& openssl dgst -sha256 -verify test_public.pem -signature signature.sig test_document.txt 2>`$null; `$LASTEXITCODE -eq 0" `
         "Should verify digital signature successfully" `
         15
-    
+
     Invoke-Test "Signature Tampering Detection" `
-        "'tampered content' | Out-File tampered.txt; & openssl dgst -sha256 -verify test_public.pem -signature signature.sig tampered.txt 2>$null; `$LASTEXITCODE -ne 0" `
+        "'tampered content' | Out-File tampered.txt; & openssl dgst -sha256 -verify test_public.pem -signature signature.sig tampered.txt 2>`$null; `$LASTEXITCODE -ne 0" `
         "Should detect signature tampering" `
-        15
-    
-    Invoke-Test "Signature File Integrity" `
+        15    Invoke-Test "Signature File Integrity" `
         "`$size = (Get-Item signature.sig).Length; `$size -gt 200 -and `$size -lt 500" `
         "Signature file should have reasonable size" `
         5
@@ -316,7 +314,7 @@ function Test-FileOperations {
         5
     
     Invoke-Test "Binary File Handling" `
-        "Test-Path binary_test.bin -and (Get-Item binary_test.bin).Length -eq 1024" `
+        "(Test-Path binary_test.bin) -and ((Get-Item binary_test.bin).Length -eq 1024)" `
         "Should handle binary files correctly" `
         5
     
