@@ -139,13 +139,14 @@ jobs:
         cd C:\vcpkg
         git pull
         .\bootstrap-vcpkg.bat -disableMetrics
-        # Install dependencies with retry logic
+        # Install dependencies with retry logic using manifest mode
         $maxAttempts = 3
         $attempt = 1
         do {
           Write-Host "Attempt $attempt of $maxAttempts"
           try {
-            C:\vcpkg\vcpkg.exe install --clean-after-build
+            # Use explicit package list from vcpkg.json
+            C:\vcpkg\vcpkg.exe install boost-system:x64-windows boost-filesystem:x64-windows boost-program-options:x64-windows cryptopp:x64-windows openssl:x64-windows --clean-after-build
             $success = $true
             break
           } catch {
