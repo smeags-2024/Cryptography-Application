@@ -135,8 +135,37 @@ jobs:
     - name: Install dependencies via vcpkg
       run: |
         C:\vcpkg\vcpkg.exe integrate install
-        # Use vcpkg.json for dependency management
-        C:\vcpkg\vcpkg.exe install --clean-after-build
+        # Update vcpkg to latest version first
+        cd C:\vcpkg
+        git pull
+        .\bootstrap-vcpkg.bat -disableMetrics
+        # Install dependencies with retry logic
+        $maxAttempts = 3
+        $attempt = 1
+        do {
+          Write-Host "Attempt $attempt of $maxAttempts"
+          try {
+            C:\vcpkg\vcpkg.exe install --clean-after-build
+            $success = $true
+            break
+          } catch {
+            Write-Host "Installation failed on attempt $attempt"
+            $attempt++
+            if ($attempt -le $maxAttempts) {
+              Write-Host "Retrying..."
+              Start-Sleep -Seconds 30
+            }
+          }
+        } while ($attempt -le $maxAttempts -and -not $success)
+        
+        if (-not $success) {
+          Write-Host "All attempts failed. Trying individual package installation..."
+          C:\vcpkg\vcpkg.exe install openssl:x64-windows --clean-after-build
+          C:\vcpkg\vcpkg.exe install cryptopp:x64-windows --clean-after-build
+          C:\vcpkg\vcpkg.exe install boost-system:x64-windows --clean-after-build
+          C:\vcpkg\vcpkg.exe install boost-filesystem:x64-windows --clean-after-build
+          C:\vcpkg\vcpkg.exe install boost-program-options:x64-windows --clean-after-build
+        }
     
     - name: Setup Qt5
       uses: jurplel/install-qt-action@v3
