@@ -103,6 +103,10 @@ test_build_system() {
     PROJECT_PATH="${PROJECT_ROOT:-../..}"
     BUILD_PATH="${BUILD_DIR:-$PROJECT_PATH/build}"
     
+    # Convert to absolute paths to avoid issues
+    PROJECT_PATH=$(cd "$PROJECT_PATH" && pwd)
+    BUILD_PATH="$PROJECT_PATH/build"
+    
     # Debug: Show current working directory and file structure
     echo "Debug: Current working directory: $(pwd)"
     echo "Debug: Project path: $PROJECT_PATH"
@@ -113,15 +117,15 @@ test_build_system() {
     ls -la "$BUILD_PATH" 2>/dev/null | head -10 || echo "Build directory not found"
     
     run_test "CMake Configuration" \
-        "test -d $BUILD_PATH && cd $BUILD_PATH && cmake --version && test -f CMakeCache.txt" \
+        "test -d \"${BUILD_PATH}\" && cd \"${BUILD_PATH}\" && cmake --version && test -f CMakeCache.txt" \
         "CMake should be configured and cache file should exist"
     
     run_test "Build Directory Structure" \
-        "test -d $BUILD_PATH && test -f $PROJECT_PATH/CMakeLists.txt" \
+        "test -d \"${BUILD_PATH}\" && test -f \"${PROJECT_PATH}/CMakeLists.txt\"" \
         "Build directory and CMakeLists.txt should exist"
     
     run_test "Executable Generation" \
-        "test -f $BUILD_PATH/CryptographyApplication || test -f $BUILD_PATH/CryptographyApplication.exe || test -f $BUILD_PATH/Release/CryptographyApplication.exe" \
+        "test -f \"${BUILD_PATH}/CryptographyApplication\" || test -f \"${BUILD_PATH}/CryptographyApplication.exe\" || test -f \"${BUILD_PATH}/Release/CryptographyApplication.exe\"" \
         "Main executable should be built successfully"
 }
 
