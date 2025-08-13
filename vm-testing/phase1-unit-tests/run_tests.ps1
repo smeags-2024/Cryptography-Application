@@ -192,12 +192,12 @@ function Test-AESCryptography {
         15
 
     Invoke-Test "AES-256-CBC Decryption" `
-        "& openssl enc -aes-256-cbc -d -in aes_test.enc -out aes_decrypted.txt -pass pass:testpassword -pbkdf2 2>`$null; if (Test-Path aes_test.enc -and Test-Path aes_decrypted.txt) { `$true } else { `$false }" `
+        "& openssl enc -aes-256-cbc -d -in aes_test.enc -out aes_decrypted.txt -pass pass:testpassword -pbkdf2 2>`$null; if ((Test-Path aes_test.enc) -and (Test-Path aes_decrypted.txt)) { `$true } else { `$false }" `
         "Should decrypt AES file successfully" `
         15
 
     Invoke-Test "AES Encryption Randomness" `
-        "& openssl enc -aes-256-cbc -in test_document.txt -out aes1.enc -pass pass:password -pbkdf2 2>`$null; & openssl enc -aes-256-cbc -in test_document.txt -out aes2.enc -pass pass:password -pbkdf2 2>`$null; if (Test-Path aes1.enc -and Test-Path aes2.enc) { -not (Compare-Object (Get-Content aes1.enc -Raw) (Get-Content aes2.enc -Raw)) } else { `$false }" `
+        "& openssl enc -aes-256-cbc -in test_document.txt -out aes1.enc -pass pass:password -pbkdf2 2>`$null; & openssl enc -aes-256-cbc -in test_document.txt -out aes2.enc -pass pass:password -pbkdf2 2>`$null; if ((Test-Path aes1.enc) -and (Test-Path aes2.enc)) { -not (Compare-Object (Get-Content aes1.enc -Raw) (Get-Content aes2.enc -Raw)) } else { `$false }" `
         "Multiple AES encryptions should produce different output" `
         20
     
