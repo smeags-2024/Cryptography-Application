@@ -80,16 +80,20 @@ run_test() {
 test_build_system() {
     print_test_section "BUILD SYSTEM TESTS"
     
+    # Use environment variables if set (for GitHub Actions), otherwise use default paths
+    PROJECT_PATH="${PROJECT_ROOT:-$HOME/Cryptography-Application}"
+    BUILD_PATH="${BUILD_DIR:-$PROJECT_PATH/build}"
+    
     run_test "CMake Configuration" \
-        "cd $HOME/Cryptography-Application/build && cmake --version && test -f CMakeCache.txt" \
+        "cd $BUILD_PATH && cmake --version && test -f CMakeCache.txt" \
         "CMake should be configured and cache file should exist"
     
     run_test "Build Directory Structure" \
-        "test -d $HOME/Cryptography-Application/build && test -f $HOME/Cryptography-Application/CMakeLists.txt" \
+        "test -d $BUILD_PATH && test -f $PROJECT_PATH/CMakeLists.txt" \
         "Build directory and CMakeLists.txt should exist"
     
     run_test "Executable Generation" \
-        "test -f $HOME/Cryptography-Application/build/CryptographyApplication || test -f $HOME/Cryptography-Application/build/CryptographyApplication.exe" \
+        "test -f $BUILD_PATH/CryptographyApplication || test -f $BUILD_PATH/CryptographyApplication.exe" \
         "Main executable should be built successfully"
 }
 

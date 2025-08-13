@@ -17,16 +17,17 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y build-essential cmake pkg-config
-        sudo apt install -y qtbase5-dev qttools5-dev
-        sudo apt install -y libssl-dev libcrypto++-dev
+        sudo apt install -y qtbase5-dev qttools5-dev qtbase5-dev-tools
+        sudo apt install -y libssl-dev libcryptopp-dev
         sudo apt install -y libboost-all-dev
         sudo apt install -y bc valgrind
     
     - name: Configure CMake
       run: |
-        mkdir build
+        mkdir -p build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake .. -DCMAKE_BUILD_TYPE=Release \
+                 -DCMAKE_PREFIX_PATH=/usr/lib/x86_64-linux-gnu/cmake/Qt5
     
     - name: Build
       run: |
@@ -35,8 +36,12 @@ jobs:
     
     - name: Run Unit Tests
       run: |
+        # Update paths in test script for GitHub Actions environment
         cd vm-testing/phase1-unit-tests
         chmod +x run_tests.sh
+        # Set environment variables for correct paths
+        export PROJECT_ROOT="$GITHUB_WORKSPACE"
+        export BUILD_DIR="$GITHUB_WORKSPACE/build"
         ./run_tests.sh
     
     - name: Upload Test Results
