@@ -6,6 +6,25 @@
 
 set -e
 
+# Platform detection
+OS="$(uname -s)"
+case "${OS}" in
+    Linux*)     MACHINE=Linux;;
+    Darwin*)    MACHINE=Mac;;
+    CYGWIN*)    MACHINE=Cygwin;;
+    MINGW*)     MACHINE=MinGw;;
+    *)          MACHINE="UNKNOWN:${OS}"
+esac
+
+# Platform-specific commands
+if [[ "$MACHINE" == "Mac" ]]; then
+    SHA256_CMD="shasum -a 256"
+    MD5_CMD="md5 -q"
+else
+    SHA256_CMD="sha256sum"
+    MD5_CMD="md5sum"
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -80,12 +99,12 @@ run_test() {
 test_build_system() {
     print_test_section "BUILD SYSTEM TESTS"
     
-    # Use environment variables if set (for GitHub Actions), otherwise use default paths
-    PROJECT_PATH="${PROJECT_ROOT:-$HOME/Cryptography-Application}"
+    # Use environment variables if set (for GitHub Actions), otherwise use relative paths
+    PROJECT_PATH="${PROJECT_ROOT:-../../}"
     BUILD_PATH="${BUILD_DIR:-$PROJECT_PATH/build}"
     
     run_test "CMake Configuration" \
-        "cd $BUILD_PATH && cmake --version && test -f CMakeCache.txt" \
+        "test -d $BUILD_PATH && cd $BUILD_PATH && cmake --version && test -f CMakeCache.txt" \
         "CMake should be configured and cache file should exist"
     
     run_test "Build Directory Structure" \
@@ -138,17 +157,23 @@ test_hash_functions() {
     
     # Test SHA-256
     run_test "SHA-256 Hash Consistency" \
-        "echo 'test data' | sha256sum | cut -d' ' -f1 | grep -q '^[a-f0-9]\{64\}$'" \
+        "echo 'test data' | $SHA256_CMD | cut -d' ' -f1 | grep -q '^[a-f0-9]\{64\}$'" \
         "SHA-256 should produce 64-character hexadecimal hash"
     
     # Test MD5
-    run_test "MD5 Hash Consistency" \
-        "echo 'test data' | md5sum | cut -d' ' -f1 | grep -q '^[a-f0-9]\{32\}$'" \
-        "MD5 should produce 32-character hexadecimal hash"
+    if [[ "$MACHINE" == "Mac" ]]; then
+        run_test "MD5 Hash Consistency" \
+            "echo 'test data' | $MD5_CMD | grep -q '^[a-f0-9]\{32\}$'" \
+            "MD5 should produce 32-character hexadecimal hash"
+    else
+        run_test "MD5 Hash Consistency" \
+            "echo 'test data' | $MD5_CMD | cut -d' ' -f1 | grep -q '^[a-f0-9]\{32\}$'" \
+            "MD5 should produce 32-character hexadecimal hash"
+    fi
     
     # Test hash consistency
     run_test "Hash Deterministic Behavior" \
-        "hash1=\$(echo 'consistent data' | sha256sum | cut -d' ' -f1) && hash2=\$(echo 'consistent data' | sha256sum | cut -d' ' -f1) && test \"\$hash1\" = \"\$hash2\"" \
+        "hash1=\$(echo 'consistent data' | $SHA256_CMD | cut -d' ' -f1) && hash2=\$(echo 'consistent data' | $SHA256_CMD | cut -d' ' -f1) && test \"\$hash1\" = \"\$hash2\"" \
         "Same input should always produce same hash"
 }
 
@@ -202,17 +227,32 @@ test_dependencies() {
         "openssl version" \
         "OpenSSL should be available and functional"
     
-    run_test "Qt5 Framework" \
-        "pkg-config --exists Qt5Core Qt5Widgets" \
-        "Qt5 development libraries should be available"
-    
-    run_test "Boost Libraries" \
-        "test -d /usr/include/boost || test -d /usr/local/include/boost" \
-        "Boost libraries should be available"
-    
-    run_test "Crypto++ Library" \
-        "test -d /usr/include/cryptopp || test -d /usr/local/include/cryptopp" \
-        "Crypto++ libraries should be available"
+    # Qt5 detection with multiple methods
+    if [[ "$MACHINE" == "Mac" ]]; then
+        run_test "Qt5 Framework" \
+            "pkg-config --exists Qt5Core Qt5Widgets || test -d /opt/homebrew/opt/qt@5 || test -d /usr/local/opt/qt@5 || test -n \"\$Qt5_Dir\"" \
+            "Qt5 development libraries should be available"
+        
+        run_test "Boost Libraries" \
+            "test -d /usr/include/boost || test -d /usr/local/include/boost || test -d /opt/homebrew/include/boost" \
+            "Boost libraries should be available"
+        
+        run_test "Crypto++ Library" \
+            "test -d /usr/include/cryptopp || test -d /usr/local/include/cryptopp || test -d /opt/homebrew/include/cryptopp" \
+            "Crypto++ libraries should be available"
+    else
+        run_test "Qt5 Framework" \
+            "pkg-config --exists Qt5Core Qt5Widgets" \
+            "Qt5 development libraries should be available"
+        
+        run_test "Boost Libraries" \
+            "test -d /usr/include/boost || test -d /usr/local/include/boost" \
+            "Boost libraries should be available"
+        
+        run_test "Crypto++ Library" \
+            "test -d /usr/include/cryptopp || test -d /usr/local/include/cryptopp" \
+            "Crypto++ libraries should be available"
+    fi
     
     run_test "CMake Build Tool" \
         "cmake --version | grep -q 'cmake version'" \
