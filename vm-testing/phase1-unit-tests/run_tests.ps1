@@ -402,9 +402,9 @@ function New-JsonReport {
             memory_safety = "Memory management and safety checks"
         }
         recommendations = @(
-            if ($script:FailedTests -eq 0) { "All unit tests passed - ready for integration testing" } else { "Review failed unit tests before proceeding" },
-            if ($script:SkippedTests -gt 0) { "Some tests were skipped - ensure all dependencies are installed" } else { "All test categories were executed" },
-            "Consider running tests on different Windows versions",
+            if ($script:FailedTests -eq 0) { "All unit tests passed - ready for integration testing" } else { "Review failed unit tests before proceeding" }
+            if ($script:SkippedTests -gt 0) { "Some tests were skipped - ensure all dependencies are installed" } else { "All test categories were executed" }
+            "Consider running tests on different Windows versions"
             "Verify functionality with real-world data sizes"
         )
     }
