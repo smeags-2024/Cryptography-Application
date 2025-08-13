@@ -10,12 +10,27 @@ find_package(Boost REQUIRED COMPONENTS system filesystem program_options)
 find_package(PkgConfig REQUIRED)
 
 # Find Crypto++
-find_library(CRYPTOPP_LIBRARIES cryptopp)
-find_path(CRYPTOPP_INCLUDE_DIR cryptopp/cryptlib.h)
+find_library(CRYPTOPP_LIBRARIES 
+    NAMES cryptopp crypto++
+    PATHS /usr/lib /usr/local/lib /usr/lib/x86_64-linux-gnu
+    PATH_SUFFIXES lib
+)
+find_path(CRYPTOPP_INCLUDE_DIR 
+    NAMES cryptopp/cryptlib.h crypto++/cryptlib.h
+    PATHS /usr/include /usr/local/include
+    PATH_SUFFIXES cryptopp crypto++
+)
 
 if(NOT CRYPTOPP_LIBRARIES)
-    message(FATAL_ERROR "Crypto++ library not found")
+    message(FATAL_ERROR "Crypto++ library not found. Install libcrypto++-dev or libcryptopp-dev")
 endif()
+
+if(NOT CRYPTOPP_INCLUDE_DIR)
+    message(FATAL_ERROR "Crypto++ headers not found. Install libcrypto++-dev or libcryptopp-dev")
+endif()
+
+message(STATUS "Found Crypto++: ${CRYPTOPP_LIBRARIES}")
+message(STATUS "Crypto++ include dir: ${CRYPTOPP_INCLUDE_DIR}")
 
 # Find Qt5 for GUI
 find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
