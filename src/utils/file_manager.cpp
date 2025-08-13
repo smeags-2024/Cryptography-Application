@@ -272,7 +272,7 @@ OperationResult FileManager::copyFile(const std::string& source, const std::stri
             fs::create_directories(destDir);
         }
         
-        fs::copy_file(source, destination, fs::copy_option::overwrite_if_exists);
+        fs::copy_file(source, destination, fs::copy_options::overwrite_existing);
         return OperationResult(true, "File copied successfully");
         
     } catch (const fs::filesystem_error& e) {
@@ -283,7 +283,7 @@ OperationResult FileManager::copyFile(const std::string& source, const std::stri
 bool FileManager::isValidPath(const std::string& path) {
     try {
         fs::path p(path);
-        return !path.empty() && p.is_absolute() || p.is_relative();
+        return !path.empty() && (p.is_absolute() || p.is_relative());
     } catch (const fs::filesystem_error&) {
         return false;
     }

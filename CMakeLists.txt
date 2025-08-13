@@ -6,6 +6,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find required packages
 find_package(OpenSSL REQUIRED)
+
+# Boost configuration - handle vcpkg paths for Windows
+if(WIN32 AND DEFINED ENV{VCPKG_ROOT})
+    set(Boost_USE_STATIC_LIBS ON)
+    set(Boost_USE_MULTITHREADED ON)
+    set(Boost_USE_STATIC_RUNTIME OFF)
+endif()
 find_package(Boost REQUIRED COMPONENTS system filesystem program_options)
 
 # Find PkgConfig (optional on Windows, required on Unix)

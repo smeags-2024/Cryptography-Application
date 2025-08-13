@@ -137,7 +137,7 @@ KeyGenerator::KeyStrength KeyGenerator::evaluatePasswordStrength(const std::stri
     strength.score = 0;
     
     // Length scoring
-    int lengthScore = std::min(password.length() * 2, 25UL);
+    int lengthScore = std::min(static_cast<size_t>(password.length() * 2), 25UL);
     strength.score += lengthScore;
     
     // Character variety scoring

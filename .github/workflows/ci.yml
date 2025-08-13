@@ -135,13 +135,8 @@ jobs:
     - name: Install dependencies via vcpkg
       run: |
         C:\vcpkg\vcpkg.exe integrate install
-        # Install only essential packages to reduce build time
-        C:\vcpkg\vcpkg.exe install openssl:x64-windows --clean-after-build
-        C:\vcpkg\vcpkg.exe install cryptopp:x64-windows --clean-after-build
-        # Install only specific Boost components we need
-        C:\vcpkg\vcpkg.exe install boost-system:x64-windows --clean-after-build
-        C:\vcpkg\vcpkg.exe install boost-filesystem:x64-windows --clean-after-build
-        C:\vcpkg\vcpkg.exe install boost-program-options:x64-windows --clean-after-build
+        # Use vcpkg.json for dependency management
+        C:\vcpkg\vcpkg.exe install --clean-after-build
     
     - name: Setup Qt5
       uses: jurplel/install-qt-action@v3
