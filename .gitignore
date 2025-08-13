@@ -1,0 +1,100 @@
+# Build directories
+build/
+build-*/
+cmake-build-*/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Compiled binaries
+*.exe
+*.out
+*.app
+*.so
+*.dll
+*.dylib
+*.a
+*.lib
+
+# Object files
+*.o
+*.obj
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# Qt MOC files
+moc_*.cpp
+moc_*.h
+ui_*.h
+qrc_*.cpp
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+
+# Test results and logs
+*test_results*.log
+*test_report*.json
+phase*_test_results_*.log
+phase*_test_report.json
+
+# Operating system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Temporary test files
+/tmp/
+*.pem
+*.bin
+*_test.*
+
+# Package manager files
+node_modules/
+*.lockb
+package-lock.json
+
+# Python bytecode (if any Python scripts are added)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# User-specific files
+config_local.json
+*.user
+*.suo
+*.vcxproj.user
+
+# Build artifacts
+CryptographyApplication
+CryptographyApplication.exe
+*.deb
+*.rpm
+*.msi
+*.dmg
+
+# Documentation build
+docs/build/
+docs/_build/
+
+# Backup files
+*.backup
+*.orig

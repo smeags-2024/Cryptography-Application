@@ -1,0 +1,46 @@
+This is a sample text file for testing the Cryptography Application.
+
+The application provides the following features:
+
+1. AES-256 Encryption
+   - Advanced Encryption Standard with 256-bit keys
+   - CBC mode with random initialization vectors
+   - Suitable for encrypting files of any size
+
+2. RSA-2048 Encryption  
+   - Public key cryptography with 2048-bit keys
+   - OAEP padding for security
+   - Best suited for key exchange and small data
+
+3. Blowfish Encryption
+   - Fast block cipher with variable key length
+   - Good for applications requiring speed
+   - Key size up to 448 bits
+
+4. Hash Functions
+   - SHA-256: Secure Hash Algorithm with 256-bit output
+   - MD5: Message Digest Algorithm (legacy support)
+   - File integrity verification
+
+5. Digital Signatures
+   - RSA digital signatures with SHA-256/MD5
+   - Non-repudiation and authenticity verification
+   - Detached signature support
+
+6. Secure Storage
+   - Password-protected encrypted file storage
+   - Automatic encryption with unique file keys
+   - Metadata protection and integrity checking
+
+This file can be used to test encryption, hashing, and digital signature operations.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
+incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis 
+nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+
+Test data with special characters: !@#$%^&*()_+-={}[]|;:'"<>?,./~`
+
+Numbers: 1234567890
+Mixed case: AbCdEfGhIjKlMnOpQrStUvWxYz
+
+End of test file.

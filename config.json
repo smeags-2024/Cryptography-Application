@@ -1,0 +1,72 @@
+{
+  "application": {
+    "name": "Cryptography Application",
+    "version": "1.0.0",
+    "author": "CryptoApp Development Team",
+    "description": "Comprehensive cryptographic tool for file encryption, digital signatures, and secure storage"
+  },
+  "encryption": {
+    "default_algorithm": "AES256",
+    "supported_algorithms": [
+      "AES256",
+      "RSA2048", 
+      "Blowfish"
+    ],
+    "key_sizes": {
+      "AES": [128, 192, 256],
+      "RSA": [1024, 2048, 4096],
+      "Blowfish": [128, 192, 256, 448]
+    }
+  },
+  "hashing": {
+    "default_algorithm": "SHA256",
+    "supported_algorithms": [
+      "MD5",
+      "SHA256", 
+      "SHA512"
+    ]
+  },
+  "signature": {
+    "default_hash": "SHA256",
+    "supported_hash_algorithms": [
+      "MD5",
+      "SHA256"
+    ],
+    "key_format": "PEM"
+  },
+  "storage": {
+    "default_location": "~/.cryptoapp",
+    "encryption_algorithm": "AES256",
+    "hash_algorithm": "SHA256",
+    "key_derivation": {
+      "algorithm": "PBKDF2",
+      "iterations": 10000,
+      "salt_length": 32
+    }
+  },
+  "gui": {
+    "theme": "dark",
+    "window_size": {
+      "width": 1200,
+      "height": 800
+    },
+    "auto_save_keys": false,
+    "show_hex_output": true
+  },
+  "security": {
+    "secure_delete_passes": 3,
+    "memory_clearing": true,
+    "key_strength_requirements": {
+      "min_length": 8,
+      "require_mixed_case": true,
+      "require_numbers": true,
+      "require_symbols": false
+    }
+  },
+  "logging": {
+    "level": "INFO",
+    "log_file": "cryptoapp.log",
+    "max_log_size_mb": 10,
+    "log_retention_days": 30
+  }
+}

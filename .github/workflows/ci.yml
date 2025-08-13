@@ -1,0 +1,155 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential cmake pkg-config
+        sudo apt install -y qtbase5-dev qttools5-dev
+        sudo apt install -y libssl-dev libcrypto++-dev
+        sudo apt install -y libboost-all-dev
+        sudo apt install -y bc valgrind
+    
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+    
+    - name: Build
+      run: |
+        cd build
+        make -j$(nproc)
+    
+    - name: Run Unit Tests
+      run: |
+        cd vm-testing/phase1-unit-tests
+        chmod +x run_tests.sh
+        ./run_tests.sh
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-linux
+        path: |
+          vm-testing/phase1-unit-tests/*.log
+          vm-testing/phase1-unit-tests/*.json
+
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        brew install cmake qt5 openssl cryptopp boost
+    
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release \
+                 -DCMAKE_PREFIX_PATH=$(brew --prefix qt5)
+    
+    - name: Build
+      run: |
+        cd build
+        make -j$(sysctl -n hw.logicalcpu)
+    
+    - name: Run Unit Tests
+      run: |
+        cd vm-testing/phase1-unit-tests
+        chmod +x run_tests.sh
+        ./run_tests.sh
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-macos
+        path: |
+          vm-testing/phase1-unit-tests/*.log
+          vm-testing/phase1-unit-tests/*.json
+
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install vcpkg
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgGitCommitId: '2023.04.15'
+    
+    - name: Install dependencies via vcpkg
+      run: |
+        vcpkg install openssl:x64-windows
+        vcpkg install cryptopp:x64-windows
+        vcpkg install boost:x64-windows
+        vcpkg install qt5-base:x64-windows
+        vcpkg install qt5-tools:x64-windows
+    
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release `
+                 -DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake `
+                 -DVCPKG_TARGET_TRIPLET=x64-windows
+    
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config Release
+    
+    - name: Run Unit Tests (PowerShell)
+      run: |
+        cd vm-testing/phase1-unit-tests
+        if (Test-Path "run_tests.ps1") {
+          .\run_tests.ps1
+        } else {
+          Write-Host "PowerShell test script not found, skipping Windows tests"
+        }
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-windows
+        path: |
+          vm-testing/phase1-unit-tests/*.log
+          vm-testing/phase1-unit-tests/*.json
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
