@@ -100,7 +100,7 @@ test_build_system() {
     print_test_section "BUILD SYSTEM TESTS"
     
     # Use environment variables if set (for GitHub Actions), otherwise use relative paths
-    PROJECT_PATH="${PROJECT_ROOT:-../../}"
+    PROJECT_PATH="${PROJECT_ROOT:-../..}"
     BUILD_PATH="${BUILD_DIR:-$PROJECT_PATH/build}"
     
     run_test "CMake Configuration" \
