@@ -53,7 +53,7 @@ ByteVector KeyGenerator::generateAESKey(int keySize) {
 }
 
 ByteVector KeyGenerator::generateBlowfishKey(int keySize) {
-    size_t keySizeBytes = std::min(keySize / 8, 56); // Blowfish max key size is 448 bits (56 bytes)
+    size_t keySizeBytes = std::min(static_cast<size_t>(keySize / 8), static_cast<size_t>(56)); // Blowfish max key size is 448 bits (56 bytes)
     return generateRandomBytes(keySizeBytes);
 }
 
@@ -137,7 +137,7 @@ KeyGenerator::KeyStrength KeyGenerator::evaluatePasswordStrength(const std::stri
     strength.score = 0;
     
     // Length scoring
-    int lengthScore = std::min(static_cast<size_t>(password.length() * 2), 25UL);
+    int lengthScore = std::min(static_cast<int>(password.length() * 2), 25);
     strength.score += lengthScore;
     
     // Character variety scoring
