@@ -112,25 +112,34 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgGitCommitId: '2023.04.15'
+    - name: Setup vcpkg
+      run: |
+        git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
+        cd C:\vcpkg
+        .\bootstrap-vcpkg.bat
+        echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
+        echo "C:\vcpkg" >> $env:GITHUB_PATH
     
     - name: Install dependencies via vcpkg
       run: |
-        vcpkg install openssl:x64-windows
-        vcpkg install cryptopp:x64-windows
-        vcpkg install boost:x64-windows
-        vcpkg install qt5-base:x64-windows
-        vcpkg install qt5-tools:x64-windows
+        C:\vcpkg\vcpkg.exe integrate install
+        C:\vcpkg\vcpkg.exe install openssl:x64-windows
+        C:\vcpkg\vcpkg.exe install cryptopp:x64-windows
+        C:\vcpkg\vcpkg.exe install boost:x64-windows
+    
+    - name: Setup Qt5
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '5.15.2'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
     
     - name: Configure CMake
       run: |
         mkdir build
         cd build
         cmake .. -DCMAKE_BUILD_TYPE=Release `
-                 -DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake `
+                 -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake `
                  -DVCPKG_TARGET_TRIPLET=x64-windows
     
     - name: Build
