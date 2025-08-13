@@ -8,8 +8,6 @@
     "boost-program-options",
     "boost-property-tree",
     "cryptopp",
-    "openssl",
-    "qt5-base",
-    "qt5-widgets"
+    "openssl"
   ]
 }
