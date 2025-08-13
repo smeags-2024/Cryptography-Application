@@ -112,20 +112,36 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Cache vcpkg
+      uses: actions/cache@v3
+      with:
+        path: |
+          C:\vcpkg\installed
+          C:\vcpkg\packages
+        key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-vcpkg-
+    
     - name: Setup vcpkg
       run: |
-        git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
-        cd C:\vcpkg
-        .\bootstrap-vcpkg.bat
+        if (-not (Test-Path "C:\vcpkg")) {
+          git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
+          cd C:\vcpkg
+          .\bootstrap-vcpkg.bat
+        }
         echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
         echo "C:\vcpkg" >> $env:GITHUB_PATH
     
     - name: Install dependencies via vcpkg
       run: |
         C:\vcpkg\vcpkg.exe integrate install
-        C:\vcpkg\vcpkg.exe install openssl:x64-windows
-        C:\vcpkg\vcpkg.exe install cryptopp:x64-windows
-        C:\vcpkg\vcpkg.exe install boost:x64-windows
+        # Install only essential packages to reduce build time
+        C:\vcpkg\vcpkg.exe install openssl:x64-windows --clean-after-build
+        C:\vcpkg\vcpkg.exe install cryptopp:x64-windows --clean-after-build
+        # Install only specific Boost components we need
+        C:\vcpkg\vcpkg.exe install boost-system:x64-windows --clean-after-build
+        C:\vcpkg\vcpkg.exe install boost-filesystem:x64-windows --clean-after-build
+        C:\vcpkg\vcpkg.exe install boost-program-options:x64-windows --clean-after-build
     
     - name: Setup Qt5
       uses: jurplel/install-qt-action@v3
@@ -133,6 +149,7 @@ jobs:
         version: '5.15.2'
         target: 'desktop'
         arch: 'win64_msvc2019_64'
+        cache: true
     
     - name: Configure CMake
       run: |

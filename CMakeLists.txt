@@ -92,13 +92,21 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Widgets
 )
 
-# Compiler flags
-target_compile_options(${PROJECT_NAME} PRIVATE
-    -Wall
-    -Wextra
-    -O2
-    -fPIC
-)
+# Compiler flags - platform specific
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        /W4          # Warning level 4
+        /O2          # Optimize for speed
+        /DNDEBUG     # Define NDEBUG for release builds
+    )
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        -Wall
+        -Wextra
+        -O2
+        -fPIC
+    )
+endif()
 
 # Install targets
 install(TARGETS ${PROJECT_NAME}
