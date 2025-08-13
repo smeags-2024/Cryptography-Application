@@ -7,17 +7,25 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find required packages
 find_package(OpenSSL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem program_options)
-find_package(PkgConfig REQUIRED)
+
+# Find PkgConfig (optional on Windows, required on Unix)
+if(WIN32)
+    find_package(PkgConfig QUIET)
+else()
+    find_package(PkgConfig REQUIRED)
+endif()
 
 # Find Crypto++
 find_library(CRYPTOPP_LIBRARIES 
     NAMES cryptopp crypto++
     PATHS /usr/lib /usr/local/lib /usr/lib/x86_64-linux-gnu
+          ${CMAKE_PREFIX_PATH}/lib ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib
     PATH_SUFFIXES lib
 )
 find_path(CRYPTOPP_INCLUDE_DIR 
     NAMES cryptopp/cryptlib.h crypto++/cryptlib.h
     PATHS /usr/include /usr/local/include
+          ${CMAKE_PREFIX_PATH}/include ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
     PATH_SUFFIXES cryptopp crypto++
 )
 
