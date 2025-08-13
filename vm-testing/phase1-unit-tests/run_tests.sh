@@ -103,6 +103,15 @@ test_build_system() {
     PROJECT_PATH="${PROJECT_ROOT:-../..}"
     BUILD_PATH="${BUILD_DIR:-$PROJECT_PATH/build}"
     
+    # Debug: Show current working directory and file structure
+    echo "Debug: Current working directory: $(pwd)"
+    echo "Debug: Project path: $PROJECT_PATH"
+    echo "Debug: Build path: $BUILD_PATH"
+    echo "Debug: Files in project root:"
+    ls -la "$PROJECT_PATH" 2>/dev/null | head -10 || echo "Cannot list project root"
+    echo "Debug: Files in build directory:"
+    ls -la "$BUILD_PATH" 2>/dev/null | head -10 || echo "Build directory not found"
+    
     run_test "CMake Configuration" \
         "test -d $BUILD_PATH && cd $BUILD_PATH && cmake --version && test -f CMakeCache.txt" \
         "CMake should be configured and cache file should exist"
@@ -112,7 +121,7 @@ test_build_system() {
         "Build directory and CMakeLists.txt should exist"
     
     run_test "Executable Generation" \
-        "test -f $BUILD_PATH/CryptographyApplication || test -f $BUILD_PATH/CryptographyApplication.exe" \
+        "test -f $BUILD_PATH/CryptographyApplication || test -f $BUILD_PATH/CryptographyApplication.exe || test -f $BUILD_PATH/Release/CryptographyApplication.exe" \
         "Main executable should be built successfully"
 }
 
